@@ -54,6 +54,7 @@ static const CGFloat SVProgressHUDParallaxDepthPoints = 10;
 @property (nonatomic, assign) UIOffset offsetFromCenter;
 
 @property (nonatomic, strong) UIWindow *window;
+@property (nonatomic, assign) BOOL dismissing;
 
 
 - (void)showProgress:(float)progress
@@ -381,6 +382,8 @@ static const CGFloat SVProgressHUDParallaxDepthPoints = 10;
 
 
 - (void)positionHUD:(NSNotification*)notification {
+
+    if (self.dismissing) return;
     
     CGFloat keyboardHeight;
     double animationDuration;
@@ -594,6 +597,8 @@ static const CGFloat SVProgressHUDParallaxDepthPoints = 10;
 }
 
 - (void)dismiss {
+    self.dismissing = YES;
+
     NSDictionary *userInfo = [self notificationUserInfo];
     [[NSNotificationCenter defaultCenter] postNotificationName:SVProgressHUDWillDisappearNotification
                                                         object:nil
@@ -642,6 +647,7 @@ static const CGFloat SVProgressHUDParallaxDepthPoints = 10;
                              // uncomment to make sure UIWindow is gone from app.windows
                              //NSLog(@"%@", [UIApplication sharedApplication].windows);
                              //NSLog(@"keyWindow = %@", [UIApplication sharedApplication].keyWindow);
+                             self.dismissing = NO;
                          }
                      }];
 }
