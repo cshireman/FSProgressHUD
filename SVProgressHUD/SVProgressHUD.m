@@ -53,6 +53,8 @@ static const CGFloat SVProgressHUDParallaxDepthPoints = 10;
 @property (nonatomic, readonly) CGFloat visibleKeyboardHeight;
 @property (nonatomic, assign) UIOffset offsetFromCenter;
 
+@property (nonatomic, strong) UIWindow *window;
+
 
 - (void)showProgress:(float)progress
               status:(NSString*)string
@@ -474,13 +476,10 @@ static const CGFloat SVProgressHUDParallaxDepthPoints = 10;
 - (void)showProgress:(float)progress status:(NSString*)string maskType:(SVProgressHUDMaskType)hudMaskType {
     
     if(!self.overlayView.superview){
-        NSEnumerator *frontToBackWindows = [[[UIApplication sharedApplication]windows]reverseObjectEnumerator];
-        
-        for (UIWindow *window in frontToBackWindows)
-            if (window.windowLevel == UIWindowLevelNormal) {
-                [window addSubview:self.overlayView];
-                break;
-            }
+        UIWindow *window = [[UIWindow alloc] initWithFrame:[UIScreen mainScreen].bounds];
+        window.windowLevel = UIWindowLevelAlert;
+        [window addSubview:self.overlayView];
+        self.window = window;
     }
     
     if(!self.superview)
@@ -520,7 +519,8 @@ static const CGFloat SVProgressHUDParallaxDepthPoints = 10;
         self.hudView.accessibilityLabel = string;
         self.hudView.isAccessibilityElement = YES;
     }
-    
+
+    self.window.hidden = NO;
     [self.overlayView setHidden:NO];
     self.overlayView.backgroundColor = [UIColor clearColor];
     [self positionHUD:nil];
@@ -625,6 +625,8 @@ static const CGFloat SVProgressHUDParallaxDepthPoints = 10;
                              
                              [_indefiniteAnimatedView removeFromSuperview];
                              _indefiniteAnimatedView = nil;
+
+                             self.window.hidden = YES;
                              
                              UIAccessibilityPostNotification(UIAccessibilityScreenChangedNotification, nil);
                              
