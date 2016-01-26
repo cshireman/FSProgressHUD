@@ -1,18 +1,27 @@
 //
-//  SVProgressHUD.m
+//  FSProgressHUD.m
 //
 //  Created by Sam Vermette on 27.03.11.
 //  Copyright 2011 Sam Vermette. All rights reserved.
 //
-//  https://github.com/samvermette/SVProgressHUD
+//  https://github.com/samvermette/FSProgressHUD
 //
 
 #if !__has_feature(objc_arc)
-#error SVProgressHUD is ARC only. Either turn on ARC for the project or use -fobjc-arc flag
+#error FSProgressHUD is ARC only. Either turn on ARC for the project or use -fobjc-arc flag
 #endif
 
-#import "SVProgressHUD.h"
+#import "FSProgressHUD.h"
 #import <QuartzCore/QuartzCore.h>
+
+typedef NSUInteger SVProgressHUDMaskType;
+
+enum {
+	SVProgressHUDMaskTypeNone = 1, // allow user interactions while HUD is displayed
+	SVProgressHUDMaskTypeClear, // don't allow
+	SVProgressHUDMaskTypeBlack, // don't allow and dim the UI in the back of the HUD
+	SVProgressHUDMaskTypeGradient // don't allow and dim the UI with a a-la-alert-view bg gradient
+};
 
 NSString* const SVProgressHUDDidReceiveTouchEventNotification = @"SVProgressHUDDidReceiveTouchEventNotification";
 NSString* const SVProgressHUDWillDisappearNotification = @"SVProgressHUDWillDisappearNotification";
@@ -35,7 +44,7 @@ static const CGFloat SVProgressHUDRingRadius = 34;
 static const CGFloat SVProgressHUDRingNoTextRadius = 24;
 static const CGFloat SVProgressHUDParallaxDepthPoints = 10;
 
-@interface SVProgressHUD ()
+@interface FSProgressHUD ()
 
 @property (nonatomic, readwrite) SVProgressHUDMaskType maskType;
 @property (nonatomic, strong, readonly) NSTimer* fadeOutTimer;
@@ -45,7 +54,7 @@ static const CGFloat SVProgressHUDParallaxDepthPoints = 10;
 @property (nonatomic, strong) UIView* hudView;
 @property (nonatomic, strong) UILabel* stringLabel;
 @property (nonatomic, strong) UIImageView* imageView;
-@property (nonatomic, strong) SVIndefiniteAnimatedView* indefiniteAnimatedView;
+@property (nonatomic, strong) FSIndefiniteAnimatedView* indefiniteAnimatedView;
 
 @property (nonatomic, readwrite) CGFloat progress;
 @property (nonatomic, readwrite) NSUInteger activityCount;
@@ -79,11 +88,11 @@ static const CGFloat SVProgressHUDParallaxDepthPoints = 10;
 @end
 
 
-@implementation SVProgressHUD
+@implementation FSProgressHUD
 
-+(SVProgressHUD*) sharedView {
++(FSProgressHUD*) sharedView {
 	static dispatch_once_t once;
-	static SVProgressHUD* sharedView;
+	static FSProgressHUD* sharedView;
 	dispatch_once(&once, ^ { sharedView = [[self alloc] initWithFrame:[[UIScreen mainScreen] bounds]]; });
 	return sharedView;
 }
@@ -211,8 +220,8 @@ static const CGFloat SVProgressHUDParallaxDepthPoints = 10;
 		SVProgressHUDRingColor = [[UIColor alloc] initWithRed:(89.0 / 255.0) green:(164.0 / 255.0) blue:(205.0 / 255.0) alpha:1.0];
 		SVProgressHUDForegroundColor = [UIColor blackColor];
 		SVProgressHUDFont = [UIFont fontWithName:@"AvenirNext-Italic" size:12.0];
-		SVProgressHUDSuccessImage = [[UIImage imageNamed:@"SVProgressHUD.bundle/success"] imageWithRenderingMode:UIImageRenderingModeAlwaysTemplate];
-		SVProgressHUDErrorImage = [[UIImage imageNamed:@"SVProgressHUD.bundle/error"] imageWithRenderingMode:UIImageRenderingModeAlwaysTemplate];
+		SVProgressHUDSuccessImage = [[UIImage imageNamed:@"FSProgressHUD.bundle/success"] imageWithRenderingMode:UIImageRenderingModeAlwaysTemplate];
+		SVProgressHUDErrorImage = [[UIImage imageNamed:@"FSProgressHUD.bundle/error"] imageWithRenderingMode:UIImageRenderingModeAlwaysTemplate];
 		SVProgressHUDRingThickness = 4;
 	}
 
@@ -659,9 +668,9 @@ static const CGFloat SVProgressHUDParallaxDepthPoints = 10;
 
 #pragma mark - Ring progress animation
 
--(SVIndefiniteAnimatedView*) indefiniteAnimatedView {
+-(FSIndefiniteAnimatedView*) indefiniteAnimatedView {
 	if (_indefiniteAnimatedView == nil) {
-		_indefiniteAnimatedView = [[SVIndefiniteAnimatedView alloc] initWithFrame:CGRectZero];
+		_indefiniteAnimatedView = [[FSIndefiniteAnimatedView alloc] initWithFrame:CGRectZero];
 		_indefiniteAnimatedView.radius = SVProgressHUDRingRadius;
 		_indefiniteAnimatedView.strokeColor = SVProgressHUDRingColor;
 		_indefiniteAnimatedView.strokeThickness = 1.0;
@@ -836,13 +845,13 @@ static const CGFloat SVProgressHUDParallaxDepthPoints = 10;
 
 #pragma mark SVIndefiniteAnimatedView
 
-@interface SVIndefiniteAnimatedView ()
+@interface FSIndefiniteAnimatedView ()
 
 @property (nonatomic, strong) CAShapeLayer* indefiniteAnimatedLayer;
 
 @end
 
-@implementation SVIndefiniteAnimatedView
+@implementation FSIndefiniteAnimatedView
 
 -(id) initWithFrame:(CGRect)frame {
 	if (self = [super initWithFrame:frame]) {
@@ -891,7 +900,7 @@ static const CGFloat SVProgressHUDParallaxDepthPoints = 10;
 		_indefiniteAnimatedLayer.path = smoothedPath.CGPath;
 
 		CALayer* maskLayer = [CALayer layer];
-		maskLayer.contents = (id)[[UIImage imageNamed:@"SVProgressHUD.bundle/angle-mask@2x.png"] CGImage];
+		maskLayer.contents = (id)[[UIImage imageNamed:@"FSProgressHUD.bundle/angle-mask@2x.png"] CGImage];
 		maskLayer.frame = _indefiniteAnimatedLayer.bounds;
 		_indefiniteAnimatedLayer.mask = maskLayer;
 
